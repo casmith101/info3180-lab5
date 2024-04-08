@@ -11,7 +11,8 @@ from werkzeug.utils import secure_filename
 from app import app, db, photos
 from models import Movie
 from forms import MovieForm
-
+from flask import send_from_directory
+from flask_wtf.csrf import generate_csrf
 
 
 ###
@@ -57,7 +58,20 @@ def movies():
             "errors": form_errors(form)
         }), 400
 
+@app.route('/api/v1/movies', methods=['GET'])
+def get_movies():
+    movies = Movie.query.all()
+    movies_list = [{
+        "id": movie.id,
+        "title": movie.title,
+        "description": movie.description,
+        "poster": f"/api/v1/posters/{movie.poster}"
+    } for movie in movies]
+    return jsonify({"movies": movies_list})
 
+@app.route('/api/v1/posters/<filename>')
+def poster(filename):
+    return send_from_directory(app.config['UPLOADED_PHOTOS_DEST'], filename)
 ###
 # The functions below should be applicable to all Flask apps.
 ###
